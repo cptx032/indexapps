@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Music Challenge</title>
+		<meta charset="utf-8">
+
+		 <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABTCAYAAADJAsqvAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAARwSURBVHic7dzLa5xVGMfxz8TWtFWaRpvGWlFIifVG0cZUUTcKingBV1IQRF2oqy4EXfgPiC5140JQwYUiLnUliLW1aVOruCmCSheK0gjWXrSXtHFxJs00nJnczjkzkzc/OLzhZOY5z/ud5znveS/PW1M91bANo/W2HbdiNQ5gV619vhXTDWYA7MTd6Gvx+Q+XG5RrhZ0ebWibF2jj+KrUXhXU1djhcghbE9itdQuUVcI8MNLQRnFlrsE6UUN4wAyAHVhbavBOgHK9yyPgPlzTRn+Kp88GYQ6YjoJRDBb2YU7lhjKEh/CgAOLGzOOlULYj8pM4iqkubCdyUNmAP7Amg+0SOtWTweiw7gUCckC5KoPNosoBZV0GmyVVywFldQabRZUDStefZOaAksNmSWVJn66PlBwr2k6Gcgw/4gf8jFdw86zPZDn36ZT0OYVx7McYDgmLykZtxauzv7icoPyKffiu3g7i3BzfmYj0ZYmUEulzUkiDvQKI/fhrEXai0LohUi7gJ+HXn4ZwBBcT2D4b6+zESPlTuNUwZmYuOLVUp5roTKSv7elzHt8L4X+gvj2awadmKpY+raCcEFLg2/p2HP9m8GG+moz0FT0kv4a3NcnjNmkq1llyRfuBzgJCHEqWZf4VTfpzTZZLUVsjZUp8pm+32grlfDMH2qxi6ROzmWKhlUNtjZRugrISKbG+khNtJ6rtR59O1Er6RBT9AasOJaqqp09UVY+U6Hla1dcpUZWKlG5Kn2LrlE6NlGLp0+2RsjKnxFT1SFk5+sxXK4u3iKq+eIs+dVV1KLGnOCt/PSUGpdilg06FEqsMqXykDMU6qwzlHrwU+0fV0mctbsFufKnJ4/KlnjooAWUd7sBtQmHVADbWt5vrfRvnY6jUUwe5oIziOaGmaFjz+9gL0VS3QunHu3g6sV2YzAElephLaH8AX+H2hDYbNVmqiiMVlBo+kQ8IXMgBZX2kLxWUR4V6xJxKHinrcW+kPxWUxxLZaaWkUPrwkXhJbSoow4nstNKSJtpeAcBduB/Pa74OSAWlRBF3Syj9ws6OYJMAYKDeBi3MwVRQSjz3f242lDV4Bi8L7xdI5UQqKMcS2WmlI407PYLDeE8ovU/5q6SCciiRnVb6ZvqPnfhHvqrwsUQOb8/o45RQHLGFkDK/ZB5sfyIo8EVGPz+eHmR3ZiBTwrP4qbRNqPdJ7eNJDW/qGSsAZV9CKPCUUIGRyr8L2NU4wERiALG2Nx2PS3okke9n8exs42cSGJ6rXZrRE6sfb+D0Iv0ax50xw8cXaXAhbU8aBk21CS/ic/w3hy+n8alwHhW9l1wTKrFuyuz0+3gh8xjT6hVeeDdo5jLGRWHJMYHfzOPm3GfyR0ru0/2k6sHXmcc4LFwp6yr1CbV9OSLkIh4utytp9bo8UN4quROp1SP98vkdnfPeg0WrVyh+XCqMv4XD47LS40IB9UJhHMObuK68y2nVqrB6O54w80rTLfXP9wrnHb8Lx/yDwop1j84rsV2U/gdfGYPQ3bIB8AAAAABJRU5ErkJggg=="/>
+		<style type="text/css">
+			body {
+				background-color: #f3f3f3;
+				font-family: verdana;
+			}
+			.no-spacing {
+				margin: 0px;
+				padding: 0px;
+			}
+			.main-content {
+				margin: 0px;
+				padding: 0px;
+				position: absolute;
+				width: 100%;
+				height: 100%;
+			}
+			.header {
+				width: 100%;
+				height: 70%;
+			}
+			.buttons-panel {
+				width: 100%;
+				height: 30%;
+				background-color: #ddd;
+			}
+			.button-line {
+				text-align: center;
+				width: 100%;
+				height: 50%;
+			}
+			.btn {
+				font-size: 40pt;
+				width: 24%;
+				height: 100%;
+				border-width: 1px;
+				border-color: #ccc;
+				background-color: #eee;
+				border-style: solid;
+			}
+			.margin-panel {
+				width: 100%;
+				height: 20%;
+				font-size: 40pt;
+			}
+			.sheet {
+				width: 100%;
+				height: 60%;
+			}
+			.sheet-line {
+				width: 100%;
+				background-color: black;
+				height: 5px;
+				position: relative;
+			}
+			.clean-line {
+				background-color: #ddd;
+			}
+			.sheet-dot {
+				background-color: black;
+				width: 45px;
+				height: 40px;
+				left: 40%;
+				border-radius: 50%;
+				position: absolute;
+				top: 0%;
+			}
+			.best-hits {
+				right: 5px;
+				position: absolute;
+			}
+
+			#wrong-note-indicator {
+				width: 100%;
+				display: none;
+				height: 100%;
+				position: absolute;
+				text-align: center;
+				font-size: 350pt;
+				color: #e74c3c;
+			}
+		</style>
+	</head>
+	<body class="no-spacing">
+		<div class="main-content">
+			<div class="header">
+				<span id="wrong-note-indicator">A</span>
+				<div class="margin-panel">
+					<span>Hits: <span id="hits">0</span></span>
+					<span class="best-hits">Best: <span id="best-hits">0</span></span>
+				</div>
+				<div id="sheet-content" class="sheet">
+					<div id="C3" class="sheet-line clean-line" style="top: 0%;"></div>
+					<!-- B3 -->
+					<div id="A3" class="sheet-line clean-line" style="top: 12%;"></div>
+					<!-- G2 -->
+					<div id="F2" class="sheet-line" style="top: 24%;"></div>
+					<!-- E2 -->
+					<div id="D2" class="sheet-line" style="top: 36%;"></div>
+					<!-- C2 -->
+					<div id="B2" class="sheet-line" style="top: 48%;"></div>
+					<!-- A2 -->
+					<div id="G1" class="sheet-line" style="top: 60%;"></div>
+					<!-- F1 -->
+					<div id="E1" class="sheet-line" style="top: 72%;"></div>
+					<!-- D1 -->
+					<div id="C1" class="sheet-line clean-line" style="top: 84%;"></div>
+					<!-- B1 -->
+					<div id="A1" class="sheet-line clean-line" style="top: 96%;"></div>
+					<div id="dot" class="sheet-dot"></div>
+				</div>
+				<div class="margin-panel"></div>
+			</div>
+
+			<div class="buttons-panel">
+
+				<div class="button-line">
+					<button onclick="button_click(this)" class="btn">C</button>
+					<button onclick="button_click(this)" class="btn">D</button>
+					<button onclick="button_click(this)" class="btn">E</button>
+					<button onclick="button_click(this)" class="btn">F</button>
+				</div>
+
+				<div class="button-line">
+					<button onclick="button_click(this)" class="btn">G</button>
+					<button onclick="button_click(this)" class="btn">A</button>
+					<button onclick="button_click(this)" class="btn">B</button>
+				</div>
+			</div>
+
+		</div>
+
+		<script type="text/javascript">
+			function _(id) {
+				return document.getElementById(id);
+			}
+
+			function get_points() {
+				return parseInt(_('hits').innerHTML.trim());
+			}
+
+			function increment_points() {
+				var points = get_points();
+				_('hits').innerHTML = points + 1;
+			}
+
+			function clear_points() {
+				_('hits').innerHTML = '0';
+			}
+
+			function save_best_hits() {
+				var points = get_points();
+				var old_best = parseInt(_('best-hits').innerHTML.trim());
+				if (points > old_best) {
+					_('best-hits').innerHTML = points;
+				}
+			}
+
+			function show_wrong_note_indicator() {
+				_('wrong-note-indicator').innerHTML = window.current_note.substr(0, 1);
+				_('wrong-note-indicator').style.display = 'block';
+				_('wrong-note-indicator').style.color = '#e74c3c';
+				setTimeout(function() {
+					_('wrong-note-indicator').style.display = 'none';
+				}, 500);
+			}
+
+			function show_nice_indicator() {
+				_('wrong-note-indicator').innerHTML = window.current_note.substr(0, 1);
+				_('wrong-note-indicator').style.display = 'block';
+				_('wrong-note-indicator').style.color = '#2ecc71';
+				setTimeout(function() {
+					_('wrong-note-indicator').style.display = 'none';
+				}, 500);
+			}
+
+			function button_click(item) {
+				var note_selected = item.innerHTML.trim();
+				if (window.current_note.substr(0, 1) == note_selected) {
+					increment_points();
+					show_nice_indicator();
+				}
+				else {
+					show_wrong_note_indicator();
+					save_best_hits();
+					clear_points();
+				}
+				next_note();
+			}
+
+			function get_notes_reference(space_note) {
+				if (space_note === 'B3') return ['C3', 'A3'];
+				else if (space_note === 'G2') return ['A3', 'F2'];
+				else if (space_note === 'E2') return ['F2', 'D2'];
+				else if (space_note === 'C2') return ['D2', 'B2'];
+				else if (space_note === 'A2') return ['B2', 'G1'];
+				else if (space_note === 'F1') return ['G1', 'E1'];
+				else if (space_note === 'D1') return ['E1', 'C1'];
+				else if (space_note === 'B1') return ['C1', 'A1'];
+				else return null;
+			}
+
+			function get_y_of_space_note(space_note) {
+				var reference = get_notes_reference(space_note);
+				if (!reference) return null;
+
+				var y1 = get_y_by_note(reference[0]);
+				var y2 = get_y_by_note(reference[1]);
+
+				return y1 + ((y2 - y1) / 2.0);
+			}
+
+			function get_sheet_lines_notes() {
+				var lines = document.body.querySelectorAll('.sheet-line');
+				var result_list = [];
+				for (var i=0; i < lines.length; i++) {
+					result_list.push(lines[i].id);
+				}
+				return result_list;
+			}
+
+			function is_line(note) {
+				if (window.lines_ids.indexOf(note) >= 0) {
+					return true;
+				}
+				return false;
+			}
+
+			function get_y_by_note(note) {
+				if (is_line(note)) {
+					return _(note).getBoundingClientRect().top;
+				}
+				else {
+					return get_y_of_space_note(note);
+				}
+			}
+
+			function go_to_note(note) {
+				var y = get_y_by_note(note);
+				var dot_rect = _('dot').getBoundingClientRect();
+				var dot_height = dot_rect.bottom - dot_rect.top;
+				_('dot').style.top = (y - (dot_height / 2.0)) + 'px';
+			}
+
+			function get_random_note() {
+				return window.notes[Math.floor(Math.random()*window.notes.length)];
+			}
+
+			function next_note() {
+				window.current_note = get_random_note();
+				go_to_note(window.current_note);
+			}
+
+			window.onload = function() {
+				window.lines_ids = get_sheet_lines_notes();
+				window.notes = [
+					"C3", "B3", "A3", "G2", "F2", "E2",
+					"D2", "C2", "B2", "A2", "G1", "F1",
+					"E1", "D1", "C1", "B1", "A1"];
+				next_note();
+			}
+		</script>
+	</body>
+</html>
