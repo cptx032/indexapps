@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dinamic Metronome</title>
+	<meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/mithril/mithril.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.0/howler.core.min.js"></script>
+
+	<script type="text/javascript">
+		function get_url_param(name, url) {
+			if (!url) url = location.href;
+			name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+			var regexS = "[\\?&]"+name+"=([^&#]*)";
+			var regex = new RegExp( regexS );
+			var results = regex.exec( url );
+			return results == null ? null : results[1];
+		}
+		String.prototype.replaceAll = function(search, replacement) {
+			var target = this;
+			return target.replace(new RegExp(search, 'g'), replacement);
+		}
+		Array.prototype.remove = function(obj) {
+			let index = this.indexOf(obj)
+			if (index == -1)
+				return
+			return this.splice(index, 1)
+		}
+
+		function gettext(msg) {
+			return msg
+		}
+
+		function new_elem(tag) {
+			return document.body.appendChild(document.createElement(tag||"span"))
+		}
+		var IfComponent = {
+			view: vnode => {
+				if (vnode.attrs.condition) {
+					if (vnode.attrs.when_true instanceof Function)
+						return vnode.attrs.when_true(vnode)
+					return vnode.attrs.when_true
+				}
+				else {
+					if (vnode.attrs.when_false instanceof Function)
+						return vnode.attrs.when_false(vnode)
+					return vnode.attrs.when_false
+				}
+			}
+		}
+
+		var ModalRightComponent = {
+			oninit: vnode => {
+				if (!vnode.attrs.id)
+					console.warn("ModalRightComponent without ID")
+			},
+			view: vnode => {
+				var modal_class = '.modal.fade'
+				if (vnode.attrs.right)
+					modal_class += '.modal-right'
+				if (vnode.attrs.left)
+					modal_class += '.modal-left'
+
+				var modal_attrs = {
+					id: vnode.attrs.id,
+					tabindex: -1,
+					role: 'dialog',
+					'aria-labelledby': vnode.attrs.id,
+					'aria-hidden': 'true'
+				}
+
+
+				var header_content = vnode.attrs.header_content
+				if (!header_content) {
+					header_content = [
+						m('h5.modal-title', vnode.attrs.modal_title || ''),
+						m('button.close[type=button]', { 'data-dismiss': 'modal', 'aria-label': gettext('Close') },
+							m('span', { 'aria-hidden': 'true' }, m.trust('&times;'))
+						)
+					]
+				}
+
+				var footer_content = vnode.attrs.footer_content
+				if (!footer_content) {
+					let cancel_button_tag = vnode.attrs.cancel_button_tag || 'button.btn.btn-sm.btn-default'
+					let submit_button_tag = vnode.attrs.submit_button_tag || 'button.btn.btn-sm.btn-primary.mr-1'
+					footer_content = [
+						m(".row.w-100", m(".col-md-12", [
+							m(vnode.attrs.left_footer?".float-left":".float-right", [
+								m(submit_button_tag, vnode.attrs.submit_btn_attrs || {},
+									vnode.attrs.modal_confirm_label || gettext('Submit')
+								),
+								m(cancel_button_tag, vnode.attrs.cancel_btn_attrs || {},
+									vnode.attrs.modal_close_label || gettext('Cancel')
+								)
+							]),
+							m(".float-left", vnode.attrs.left_buttons||"")
+						]))
+					]
+				}
+
+				let elem_string = '.modal-dialog' + (vnode.attrs.large == true ? '.modal-lg' : '') + (vnode.attrs.small ? ".modal-sm" : "")
+				elem_string += vnode.attrs.extra_classes||''
+				return m(modal_class, modal_attrs, [
+					m(elem_string, { role: 'document' }, [
+						m('.modal-content.rounded.shadow' + (vnode.attrs.extra_content_classes||''), [
+							// HEADER
+							m('.modal-header', header_content),
+
+							// BODY
+							m('.modal-body', vnode.attrs.modal_body),
+
+							// FOOTER
+							m(IfComponent, {
+								condition: vnode.attrs.remove_footer,
+								when_true: "",
+								when_false: m(".modal-footer", footer_content)
+							})
+						])
+					])
+				])
+			}
+		}
+
+		var AlertComponent = {
+			view: vnode => {
+				var type = vnode.attrs.type || 'warning'
+				var tag = '.alert.alert-' + type + '.rounded[role=alert]' + (vnode.attrs.extra_classes||"")
+				return m(tag, vnode.attrs.title)
+			}
+		}
+
+		var FormInputComponent = {
+			oncreate: vnode => {
+				if (vnode.attrs.auto_focus) {
+					setTimeout(() => {
+						$(vnode.dom).children("input").focus()
+					}, 200)
+				}
+			},
+			view: vnode => {
+				let label = vnode.attrs.label
+				let help_text = vnode.attrs.help_text
+				let items = []
+
+				let input_attrs = {...vnode.attrs.input_attrs}
+
+				if (label) {
+					items.push(m('label' + (input_attrs.disabled ? '.disabled' : ''), label))
+				}
+
+				// the idea here is set by default some "typings events" to avoid
+				// the mithril redraw
+				let attr_names = Object.getOwnPropertyNames(input_attrs)
+
+				// handling onkeyup
+				if (attr_names.indexOf('onkeyup') !== -1) {
+					let original_onkeyup = input_attrs['onkeyup']
+					delete input_attrs['onkeyup']
+					input_attrs['onkeyup'] = evt => {
+						evt.redraw = false
+						original_onkeyup(evt)
+					}
+				}
+				// handling oninput
+				if (attr_names.indexOf('oninput') !== -1) {
+					let original_oninput = input_attrs['oninput']
+					delete input_attrs['oninput']
+					input_attrs['oninput'] = (evt) => {
+						evt.redraw = false
+						original_oninput(evt)
+					}
+				}
+
+				if (vnode.attrs.prepend || vnode.attrs.append) {
+					let input_group = m(".input-group", [
+						m(IfComponent, {
+							condition: vnode.attrs.prepend,
+							when_true: vn => {
+								return m(".input-group-prepend", vnode.attrs.prepend)
+							},
+							when_false: ""
+						}),
+						m('input' + (vnode.attrs.no_form_control_class ? "" : ".form-control") + (vnode.attrs.extra_classes||''), input_attrs||{}),
+						m(IfComponent, {
+							condition: vnode.attrs.append,
+							when_true: vn => {
+								return m(".input-group-append", vnode.attrs.append)
+							},
+							when_false: ""
+						}),
+					])
+
+					items.push(input_group)
+				}
+				else {
+					items.push(
+						m('input' + (vnode.attrs.no_form_control_class ? "" : ".form-control") + (vnode.attrs.extra_classes||''),
+						input_attrs||{})
+					)
+				}
+
+
+				if (help_text)
+					items.push(m('i.ml-1.text-muted.text-small', help_text))
+				return m('.form-group' + (vnode.attrs.form_extra_classes||""), items)
+			}
+		}
+		var TableRowComponent = {
+			view: vnode => {
+				var columns = []
+				var id = vnode.attrs.id
+				var selecteds = vnode.attrs.selecteds
+
+				if (vnode.attrs.select_items) {
+					var checkbox_attrs = {
+						onclick: evt => {
+							if (evt.target.checked)
+								selecteds.push(id)
+							else
+								selecteds.splice(selecteds.indexOf(id), 1)
+						}
+					}
+					if (selecteds.indexOf(id) !== -1)
+						checkbox_attrs.checked = 'checked'
+
+					columns.push(m('td', m(CheckboxComponent, checkbox_attrs)))
+				}
+
+				vnode.attrs.columns.forEach(item => {
+					columns.push(m('td', item))
+				})
+
+				return m('tr' + (vnode.attrs.extra_classes||""), columns)
+			}
+		}
+		var TableComponent = {
+			oninit: vnode => {
+				if (!vnode.attrs.storage)
+					console.error("You need to give the storage object to the tablecomponent")
+				let attrs = Object.getOwnPropertyNames(vnode.attrs)
+				if (attrs.indexOf("striped") == -1)
+					vnode.attrs.striped = true
+				if (attrs.indexOf("hover") == -1)
+					vnode.attrs.hover = true
+				vnode.state.storage = vnode.attrs.storage
+				vnode.attrs.id = vnode.attrs.id
+				if (!vnode.state.storage.selecteds)
+					vnode.state.storage.selecteds = []
+			},
+			view: vnode => {
+				var header_items = []
+				if (vnode.attrs.select_items) {
+					var select_all_checkbox_attrs = {
+						onclick: evt => {
+							if (vnode.state.storage.selecteds.length >= 1) {
+								vnode.state.storage.selecteds = []
+							}
+							else {
+								vnode.state.storage.selecteds = vnode.attrs.rows.map(item => {
+									return item.id
+								})
+							}
+						}
+					}
+					if (vnode.state.storage.selecteds.length === vnode.attrs.rows.length) {
+						select_all_checkbox_attrs.checked = 'checked'
+					}
+
+					if (vnode.attrs.select_options) {
+						select_all_checkbox_attrs.after_label_components = [
+							m('.dropdown', [
+								m('a.dropdown-toggle.mt-3', {
+									href: 'javascript:void(0)',
+									'data-toggle': 'dropdown',
+									'aria-haspopup': 'true',
+									'aria-expanded': 'false',
+									id: 'link-' + vnode.attrs.id
+								}),
+								m('.dropdown-menu', {
+									'aria-labelledby': 'link-' + vnode.attrs.id
+								}, vnode.attrs.select_options.map(option => {
+									var link_attrs = {
+										href: 'javascript:void(0)',
+										onclick: evt => {
+											if (option.onclick)
+												option.onclick(evt)
+										}
+									}
+									if (option.disabled)
+										link_attrs.disabled = 'disabled'
+									if (option.title)
+										link_attrs.title = option.title
+									return m('a.dropdown-item' + (option.extra_classes||''), link_attrs, option.label)
+								}))
+							])
+						]
+					}
+					header_items.push(m('th', m(CheckboxComponent, select_all_checkbox_attrs)))
+				}
+				vnode.attrs.headers.forEach(item => {
+					let items = []
+					if (item.sort) {
+						let link_attrs = {
+							href: 'javascript:void(0)',
+							onclick: evt => {
+								URLQueryFactory.toggle_sort(item.sort)
+
+								if (vnode.attrs.aftersort)
+									vnode.attrs.aftersort(evt)
+							}
+						}
+						let img_source = '/static/imgs/sort.png'
+						let is_ordered = URLQueryFactory.has_ordering_by_value(item.sort)
+						if (is_ordered[0] && !is_ordered[1])
+							img_source = '/static/imgs/desc.png'
+						else if (is_ordered[0] && is_ordered[1])
+							img_source = '/static/imgs/asc.png'
+
+						let link = m('a', link_attrs, [
+							item.label,
+							' ',
+							m('img.align-middle', {src: img_source})
+						])
+						items.push(link)
+					}
+					else {
+						items.push(item)
+					}
+
+					header_items.push(m('th', items))
+				})
+
+				// used to create 'col' tag, to set width of each column
+				let col_items = []
+				if (vnode.attrs.widths) {
+					for (let i=0; i < vnode.attrs.widths.length; i++) {
+						col_items.push(m('col', {style: 'width: ' + vnode.attrs.widths[i] + '%'}))
+					}
+				}
+
+				let extra_classes = ''
+				if (vnode.attrs.striped)
+					extra_classes += '.table-striped'
+				if (vnode.attrs.hover)
+					extra_classes += '.table-hover'
+				let rows = vnode.attrs.rows.filter(row => {
+					return !row.hidden
+				})
+				return m('table.table.data-table' + extra_classes + (vnode.attrs.extra_classes||''), [
+					m('thead', m('tr', header_items)),
+					col_items,
+					m('tbody', rows.map(row => {
+						return m(TableRowComponent, {
+							columns: row.columns,
+							extra_classes: row.extra_classes,
+							select_items: vnode.attrs.select_items,
+							id: row.id,
+							selecteds: vnode.state.storage.selecteds
+						})
+					})),
+				])
+			}
+		}
+	</script>
+	<style>
+	.bd-placeholder-img {
+		font-size: 1.125rem;
+		text-anchor: middle;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+
+	@media (min-width: 768px) {
+		.bd-placeholder-img-lg {
+			font-size: 3.5rem;
+		}
+	}
+	</style>
+</head>
+	<nav class="navbar navbar-dark bg-primary">
+		<a class="navbar-brand" href="#">M Dinamico</a>
+		<div class="float-right">
+			<span id="buttons-component"></span>
+		</div>
+	</nav>
+	<body class="d-flex flex-column h-100">
+		<main role="main" class="flex-shrink-0">
+			<div class="container" id="main-component"></div>
+		</main>
+	</body>
+	<script type="text/javascript">
+		var PLAY_ICON = '<svg class="bi bi-play-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+			'<path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>' +
+		'</svg>'
+		var STOP_ICON = '<svg class="bi bi-stop-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+			'<path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>' +
+		'</svg>'
+
+		var PLUS_ICON = '<svg class="bi bi-plus" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+			'<path fill-rule="evenodd" d="M8 3.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1 0-1h3.5V4a.5.5 0 0 1 .5-.5z"/>' +
+			'<path fill-rule="evenodd" d="M7.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0V8z"/>' +
+		'</svg>'
+		var Storage = {
+			beats: [],
+			playing: false,
+			play_and_spaw_next: (delays) => {
+				if (delays.length == 0) {
+					Storage.playing = false
+					m.redraw()
+					return
+				}
+				if (!Storage.playing)
+					return
+
+				let delay = delays.splice(0, 1)[0]
+				Storage.player.play()
+				setTimeout(() => {
+					Storage.play_and_spaw_next(delays)
+				}, delay)
+			},
+			get_delay_list: () => {
+				let clicks_list = []
+				Storage.beats.forEach(beat => {
+					let clicks = [...Array(beat.duration).keys()].map(click => {
+						return (1000.0 * 60) / beat.bpm
+					})
+					clicks_list = [
+						...clicks_list,
+						...clicks
+					]
+				})
+				return clicks_list
+			},
+			start_play: () => {
+				Storage.play_and_spaw_next(Storage.get_delay_list())
+			}
+		}
+
+		var LoaderModal = {
+			modal_id: "loader-modal",
+			version: "0.0.1",
+			show: () => {
+				$("#" + LoaderModal.modal_id).modal()
+			},
+			hide: () => {
+				$("#" + LoaderModal.modal_id).modal("hide")
+			},
+			view: vnode => {
+				return m(ModalRightComponent, {
+					id: LoaderModal.modal_id,
+					modal_body: LoaderModal.modal_body(vnode),
+					modal_title: "Versão " + LoaderModal.version,
+					footer_content: m(".row", m(".col-md-12", [
+						m("button.btn.btn-primary.btn-sm", {
+							onclick: evt => {
+								Storage.player = new Howl({
+									src: ['click.wav']
+								})
+								LoaderModal.hide()
+							}
+						}, "Ok")
+					]))
+				})
+			},
+			modal_body: vnode => {
+				return m("h3", "Versão " + LoaderModal.version)
+			}
+		}
+
+		var ButtonsComponent = {
+			view: vnode => {
+				return [
+					m("button.btn.btn-outline-light.mr-1", {
+						onclick: evt => {
+							Storage.playing = !Storage.playing
+							if (Storage.playing)
+								Storage.start_play()
+						}
+					}, Storage.playing ? m.trust(STOP_ICON) : m.trust(PLAY_ICON)),
+					m("button.btn.btn-outline-light", {
+						onclick: evt => {
+							AddBeatModal.show()
+						}
+					}, m.trust(PLUS_ICON)),
+				]
+			}
+		}
+		var AddBeatModal = {
+			storage: {},
+			modal_id: "add-beat-modal",
+			edit_index: null,
+			edit_object: beat => {
+				AddBeatModal.edit_index = Storage.beats.indexOf(beat)
+				AddBeatModal.storage.bpm = beat.bpm
+				AddBeatModal.storage.duration = beat.duration
+				AddBeatModal.show()
+			},
+			view: vnode => {
+				let submit_btn_attrs = {
+					onclick: evt => {
+						let beat = {
+							bpm: AddBeatModal.storage.bpm||90,
+							duration: AddBeatModal.storage.duration||4,
+						}
+						if (AddBeatModal.edit_index == null)
+							Storage.beats.push(beat)
+						else
+							Storage.beats[AddBeatModal.edit_index] = beat
+						AddBeatModal.clear()
+						AddBeatModal.hide()
+					}
+				}
+				let cancel_btn_attrs = {
+					onclick: evt => {
+						AddBeatModal.clear()
+						AddBeatModal.hide()
+					}
+				}
+				return m(ModalRightComponent, {
+					id: AddBeatModal.modal_id,
+					modal_body: AddBeatModal.modal_body(vnode),
+					modal_title: "Adicionar Batida",
+					submit_btn_attrs: submit_btn_attrs,
+					cancel_btn_attrs: cancel_btn_attrs,
+					modal_confirm_label: "Confirmar",
+					modal_close_label: "Cancelar",
+				})
+			},
+			clear: () => {
+				AddBeatModal.storage = {}
+				AddBeatModal.edit_index = null
+			},
+			modal_body: vnode => {
+				return [
+					m(FormInputComponent, {
+						label: "BPM",
+						input_attrs: {
+							type: "number",
+							value: AddBeatModal.storage.bpm||90,
+							oninput: evt => {
+								AddBeatModal.storage.bpm = parseInt(evt.target.value)
+							}
+						}
+					}),
+					m(FormInputComponent, {
+						label: "Quantos clicks",
+						input_attrs: {
+							type: "number",
+							value: AddBeatModal.storage.duration||4,
+							oninput: evt => {
+								AddBeatModal.storage.duration = parseInt(evt.target.value)
+							}
+						}
+					}),
+				]
+			},
+			show: () => {
+				$("#" + AddBeatModal.modal_id).modal()
+			},
+			hide: () => {
+				$("#" + AddBeatModal.modal_id).modal("hide")
+			},
+		}
+		var MainComponent = {
+			main_list_component: vnode => {
+				return m(TableComponent, {
+					id: "main-table-component",
+					storage: {},
+					extra_classes: ".table-bordered.table-sm",
+					headers: ["BPM", "Duração", ""],
+					// widths: [],
+					rows: Storage.beats.map(beat => {
+						return {
+							columns: [
+								beat.bpm,
+								beat.duration + " clicks",
+								[
+									m("a", {
+										href: "javascript:void(0)",
+										onclick: evt => {
+											Storage.beats.remove(beat)
+										}
+									}, "remover"),
+									", ",
+									m("a", {
+										href: "javascript:void(0)",
+										onclick: evt => {
+											AddBeatModal.edit_object(beat)
+										}
+									}, "editar"),
+								]
+							]
+						}
+					})
+				})
+			},
+			view: vnode => {
+				return [
+					m(".row.mt-2", m(".col-md-12",
+						m(IfComponent, {
+							condition: Storage.beats.length > 0,
+							when_true: vn => {
+								return MainComponent.main_list_component(vnode)
+							},
+							when_false: vn => {
+								return m(AlertComponent, {
+									title: "nenhuma batida"
+								})
+							}
+						})
+					))
+				]
+			}
+		}
+		m.mount(new_elem(), AddBeatModal)
+		m.mount(new_elem(), LoaderModal)
+		m.mount(document.getElementById('main-component'), MainComponent)
+		m.mount(document.getElementById('buttons-component'), ButtonsComponent)
+
+		$(document).ready(() => {
+			let beats = get_url_param("beats")||""
+			if (beats.trim()) {
+				let tuples = beats.split("@")
+				tuples.map(tuple => {
+					let values = tuple.split(".").map(i => parseInt(i))
+					Storage.beats.push({
+						bpm: values[0],
+						duration: values[1],
+					})
+				})
+			}
+			LoaderModal.show()
+		})
+	</script>
+</html>
